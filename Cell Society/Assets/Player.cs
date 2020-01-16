@@ -4,13 +4,14 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    private string[] nextPlayerPath = new string[100];
     [SerializeField] private float moveSpeed;
     [SerializeField] public Vector2 jumpForce;
     public GameManager manager;
     public Transform groundCheck;
     public bool onGround;
     public LayerMask whatIsGround;
-
+    public int pathIndex;
     private Animator anim;
     // Start is called before the first frame update
     void Start()
@@ -48,6 +49,42 @@ public class Player : MonoBehaviour
             onGround = false;
 
         }
+
+      
+
+    }
+
+    public void PickBoxID(string id)
+    {
+        nextPlayerPath[pathIndex] = id;
+
+    }
+
+    public void AddIndex()
+
+    {
+        pathIndex++;
+    }
+
+    public void ResetPath()
+
+    {
+        pathIndex = 0;
+        var index = 0;
+        foreach (var path in nextPlayerPath)
+        {
+            nextPlayerPath[index] = null;
+            index++;
+        }
+        
+
+    }
+
+    public string[] GetPath()
+
+    {
+
+        return nextPlayerPath;
 
     }
 }

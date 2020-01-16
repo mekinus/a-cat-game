@@ -2,34 +2,51 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    
+
+    public bool gameOver = false;
+    private bool playerWon = false;
+    private bool loadMenu = false;
     public Text levelText;
+    public GameObject pausedText;
+    public GameObject winText;
+    public Player player;
+    public GameObject heart;
     public GameObject loserText;
     public GameObject blackCat;
     public GameObject redEyedCat;
     public GameObject moon;
     public GameObject moonLight;
     public GameObject lamp;
+    public Transform hSpawnPoint;
     public Camera mainCamera;  
     public enum GameStates {running,waiting,paused}
 
     public GameStates gameStates;
 
     public bool noLight;
+    public bool isPaused;
     private float  blackoutCounter = 0;
     private GameObject[] box;
+    private bool firstCatHasSpawned = false;
     [SerializeField] [Range(0, 1)] private float duration;
     [SerializeField] private int gameLevel = 0;
 
     private GameObject nextBox;
 
     
-    [SerializeField] private string[] catPath = new string[100];
+    private string[] catPath = new string[100];
+
     void Start()
     {
+        Time.timeScale = 1f;
         loserText.SetActive(false);
+        pausedText.SetActive(false);
+        winText.SetActive(false);
         SetPlayerLamp(false);
         SetGameState(GameStates.waiting);
         StartCoroutine(StartGame());
@@ -38,18 +55,35 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        PauseHandler();
+
        if(gameStates == GameStates.running && !noLight)
         {
           mainCamera.backgroundColor = Color.Lerp(mainCamera.backgroundColor, Color.black, duration);
           
         }
 
+       if(gameLevel == 99 & playerWon == false)
+        {
+            playerWon = true;
+            winText.SetActive(true);
+
+        }
 
         blackoutCounter += Time.deltaTime;
         if (blackoutCounter > 10f)
             noLight = true;
 
         InputHandler();
+
+
+        if (isPaused)
+            if (Input.GetKeyUp(KeyCode.Q))
+            {
+                SceneManager.LoadScene(0);
+                isPaused = false;
+            }
     }
 
     void TurnMoonLightOff ()
@@ -75,6 +109,9 @@ public class GameManager : MonoBehaviour
 
     void RandomizeBox ()
     {
+        if (firstCatHasSpawned == false)
+            firstCatHasSpawned = true;
+
         int index = Random.Range(0, box.Length);
         Transform boxPosition = box[index].gameObject.transform;
         nextBox = box[index];
@@ -107,10 +144,14 @@ public class GameManager : MonoBehaviour
     }
 
 
+
+
+
     void LevelUp()
     {
         gameLevel++;
         levelText.text = gameLevel.ToString();
+        Instantiate(heart, hSpawnPoint.position, Quaternion.identity);
 
     }
 
@@ -118,9 +159,20 @@ public class GameManager : MonoBehaviour
     public void ProceedGame()
     {
         
-        LevelUp();
+        if(playerWon == false)
+        {
+            ComparePaths();
+            if (gameOver == false)
 
-        Invoke("RandomizeBox", 1f);
+            {
+                LevelUp();
+                player.ResetPath();
+                Invoke("RandomizeBox", 1f);
+
+            }
+        }
+     
+       
        
         
     }
@@ -167,7 +219,7 @@ public class GameManager : MonoBehaviour
                 GameObject.Find("down-box").GetComponent<Box>().SetColor(Color.white);
             }
 
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1f);
         }
 
       
@@ -176,6 +228,7 @@ public class GameManager : MonoBehaviour
     public void SetGameOver()
     {
         loserText.SetActive(true);
+        gameOver = true;
     }
 
    
@@ -189,11 +242,88 @@ public class GameManager : MonoBehaviour
         SetPlayerLamp(true);
         GetBoxList();
         RandomizeBox();
+        isPaused = false;
       
     }
 
-    
+
+    public void ComparePaths()
+    {
+        int index = 0;
+
+        string[] playerPath = player.GetPath();
+
+        for(int i = 0; i < 99; i++)
 
 
-    
+        {
+            if (playerPath[i] != catPath[i])
+            {
+                Debug.Log(playerPath[i]);
+                Debug.Log(catPath[i]);
+                SetGameOver();
+
+
+            }
+
+            else if (playerPath[0] == null)
+                SetGameOver();
+           
+
+
+        }
+
+    }
+
+    public void PauseHandler()
+
+    {
+        
+        if(Input.GetKeyUp(KeyCode.Escape))
+
+        {
+            if (!isPaused)
+            {
+                
+                pausedText.SetActive(true);
+                Time.timeScale = 0;
+                isPaused = !isPaused;
+
+               
+            }
+
+            else
+            {
+                pausedText.SetActive(false);
+                Time.timeScale = 1;
+                isPaused = !isPaused;
+            }
+
+
+
+            
+
+        }
+
+
+        
+        if(gameOver == true & loadMenu == false)
+        {
+
+            loadMenu = true;
+            Invoke("BackToMenu", 2f);
+
+        }
+
+
+    }
+
+    void BackToMenu()
+    {
+
+        SceneManager.LoadScene(0);
+
+    }
+
+
 }

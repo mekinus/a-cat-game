@@ -6,17 +6,21 @@ using UnityEngine.SceneManagement;
 public class TitleManager : MonoBehaviour
 {
 
+    public GameObject manualBoard;
     public Animator billAnim;
+    private bool manualIsDisplayed;
     // Start is called before the first frame update
     void Start()
     {
-       
+        manualIsDisplayed = false;
+        manualBoard.SetActive(false);
+        Time.timeScale = 1f;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        InputHandler();
     }
 
     public void StartGame()
@@ -28,7 +32,7 @@ public class TitleManager : MonoBehaviour
 
     private void LoadMainLevel()
     {
-            SceneManager.LoadScene(0);
+            SceneManager.LoadScene(1);
     }
 
     public void ExitGame()
@@ -38,5 +42,24 @@ public class TitleManager : MonoBehaviour
     }
 
 
+
+    public void InputHandler()
+    {
+        if(Input.GetKeyUp(KeyCode.Escape) & manualIsDisplayed == false)
+
+        {
+            manualIsDisplayed = true;
+            manualBoard.SetActive(true);
+
+        }
+
+        else if (Input.GetKeyUp(KeyCode.Escape) & manualIsDisplayed == true)
+
+        {
+            manualIsDisplayed = false;
+            manualBoard.SetActive(false);
+
+        }
+    }
 }
 
